@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GeneTrace – Hereditary Disease Risk Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0a0f1e;color:#e2e8f0;line-height:1.6}
+a{text-decoration:none;color:inherit}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:68px;background:rgba(10,15,30,.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07)}
+.brand{font-size:1.3rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:.4rem}
+.brand span{color:#38bdf8}
+.nav-links{display:flex;align-items:center;gap:.25rem}
+.nav-links a{color:rgba(255,255,255,.7);padding:.4rem .9rem;border-radius:8px;font-size:.88rem;font-weight:500;transition:all .2s}
+.nav-links a:hover{background:rgba(255,255,255,.1);color:#fff}
+.btn-nav-login{border:1.5px solid rgba(255,255,255,.25)!important;color:#fff!important}
+.btn-nav-start{background:linear-gradient(135deg,#38bdf8,#6366f1)!important;color:#fff!important;padding:.4rem 1.1rem!important;border-radius:8px}
+
+/* HERO */
+.hero{min-height:100vh;position:relative;display:flex;align-items:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1600&q=80') center/cover no-repeat;filter:brightness(.25)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,15,30,.95) 0%,rgba(10,15,30,.6) 60%,rgba(56,189,248,.08) 100%)}
+.hero-content{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:6rem 2.5rem 4rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#38bdf8;padding:.35rem .9rem;border-radius:99px;font-size:.78rem;font-weight:600;letter-spacing:.04em;margin-bottom:1.25rem}
+.hero h1{font-size:3rem;font-weight:800;line-height:1.1;color:#fff;margin-bottom:1.25rem}
+.hero h1 span{background:linear-gradient(135deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:rgba(255,255,255,.6);font-size:1.05rem;margin-bottom:2rem;max-width:480px}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap}
+.btn-primary{display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;padding:.75rem 1.75rem;border-radius:10px;font-weight:700;font-size:.95rem;transition:all .25s;border:none;cursor:pointer}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(56,189,248,.35)}
+.btn-outline-w{display:inline-flex;align-items:center;gap:.5rem;background:transparent;color:#fff;padding:.75rem 1.75rem;border-radius:10px;font-weight:600;font-size:.95rem;border:1.5px solid rgba(255,255,255,.25);transition:all .25s}
+.btn-outline-w:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5)}
+.hero-card{background:rgba(255,255,255,.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:2rem}
+.hero-card-title{color:#fff;font-weight:700;font-size:1rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:.5rem}
+.risk-row{margin-bottom:1rem}
+.risk-row-label{display:flex;justify-content:space-between;font-size:.8rem;color:rgba(255,255,255,.6);margin-bottom:.35rem}
+.risk-bar-bg{background:rgba(255,255,255,.08);border-radius:99px;height:8px;overflow:hidden}
+.risk-bar-fill{height:100%;border-radius:99px}
+.fill-blue{background:linear-gradient(90deg,#38bdf8,#6366f1)}
+.fill-orange{background:linear-gradient(90deg,#fb923c,#f43f5e)}
+.fill-purple{background:linear-gradient(90deg,#a78bfa,#ec4899)}
+.hero-card-footer{margin-top:1.25rem;padding:.75rem;background:rgba(56,189,248,.08);border-radius:10px;font-size:.78rem;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:.5rem}
+
+/* STATS BAR */
+.stats-bar{background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06);padding:2rem 2.5rem}
+.stats-bar-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;text-align:center}
+.stat-num{font-size:2rem;font-weight:800;background:linear-gradient(135deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:.82rem;color:rgba(255,255,255,.45);margin-top:.2rem}
+
+/* FEATURES */
+.section{padding:5rem 2.5rem}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-tag{display:inline-block;background:rgba(56,189,248,.1);color:#38bdf8;padding:.3rem .85rem;border-radius:99px;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.75rem}
+.section-title{font-size:2rem;font-weight:800;color:#fff;margin-bottom:.5rem}
+.section-sub{color:rgba(255,255,255,.45);font-size:1rem;max-width:560px}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:3rem}
+.feat-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:1.75rem;transition:all .25s;position:relative;overflow:hidden}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#38bdf8,#6366f1);opacity:0;transition:opacity .25s}
+.feat-card:hover{background:rgba(255,255,255,.06);border-color:rgba(56,189,248,.2);transform:translateY(-4px)}
+.feat-card:hover::before{opacity:1}
+.feat-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(56,189,248,.15),rgba(99,102,241,.15));display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:1rem}
+.feat-card h3{color:#fff;font-size:1rem;font-weight:700;margin-bottom:.4rem}
+.feat-card p{color:rgba(255,255,255,.45);font-size:.85rem;line-height:1.6}
+
+/* DISEASES */
+.diseases-section{padding:5rem 2.5rem;background:rgba(255,255,255,.015)}
+.disease-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;margin-top:3rem}
+.disease-card{border-radius:16px;padding:2rem;text-align:center;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.07);transition:transform .25s}
+.disease-card:hover{transform:translateY(-4px)}
+.disease-card.d1{background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(56,189,248,.02))}
+.disease-card.d2{background:linear-gradient(135deg,rgba(244,63,94,.08),rgba(244,63,94,.02))}
+.disease-card.d3{background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.02))}
+.disease-card.d4{background:linear-gradient(135deg,rgba(251,146,60,.08),rgba(251,146,60,.02))}
+.disease-icon{font-size:2.5rem;margin-bottom:.75rem}
+.disease-card h3{color:#fff;font-weight:700;margin-bottom:.4rem}
+.disease-card p{color:rgba(255,255,255,.45);font-size:.83rem}
+
+/* HOW IT WORKS */
+.how-section{padding:5rem 2.5rem}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-top:3rem;position:relative}
+.step-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:2rem;text-align:center}
+.step-num{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;font-size:1.2rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.step-card h3{color:#fff;font-weight:700;margin-bottom:.4rem}
+.step-card p{color:rgba(255,255,255,.45);font-size:.83rem}
+
+/* IMAGE SECTION */
+.img-section{padding:5rem 2.5rem;background:rgba(255,255,255,.015)}
+.img-section-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.img-section img{border-radius:20px;width:100%;height:380px;object-fit:cover;border:1px solid rgba(255,255,255,.08)}
+.img-section-text .section-tag{margin-bottom:.75rem}
+.img-section-text h2{font-size:1.9rem;font-weight:800;color:#fff;margin-bottom:1rem;line-height:1.2}
+.img-section-text p{color:rgba(255,255,255,.5);font-size:.95rem;margin-bottom:1.5rem;line-height:1.8}
+.check-list{list-style:none;display:flex;flex-direction:column;gap:.6rem}
+.check-list li{display:flex;align-items:center;gap:.6rem;color:rgba(255,255,255,.65);font-size:.88rem}
+.check-list li::before{content:'✓';width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;font-size:.65rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* CTA */
+.cta-section{padding:5rem 2.5rem;text-align:center;position:relative;overflow:hidden}
+.cta-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=1400&q=80') center/cover no-repeat;filter:brightness(.15)}
+.cta-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,15,30,.95),rgba(56,189,248,.1))}
+.cta-content{position:relative;z-index:1;max-width:600px;margin:0 auto}
+.cta-content h2{font-size:2.2rem;font-weight:800;color:#fff;margin-bottom:1rem}
+.cta-content p{color:rgba(255,255,255,.55);font-size:1rem;margin-bottom:2rem}
+
+/* FOOTER */
+footer{background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.06);padding:2rem 2.5rem;text-align:center;color:rgba(255,255,255,.3);font-size:.82rem}
+footer a{color:#38bdf8}
+
+@media(max-width:900px){
+  .hero-content{grid-template-columns:1fr;gap:2rem}
+  .hero-card{display:none}
+  .stats-bar-inner{grid-template-columns:1fr 1fr}
+  .img-section-inner{grid-template-columns:1fr}
+  .img-section img{height:240px}
+  nav .nav-links{display:none}
+}
+@media(max-width:600px){
+  .hero h1{font-size:2rem}
+  .stats-bar-inner{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">🧬 Gene<span>Trace</span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#diseases">Diseases</a>
+    <a href="#how">How It Works</a>
+    <a href="/about">About</a>
+    <a href="/login" class="btn-nav-login" style="border:1.5px solid rgba(255,255,255,.25);padding:.4rem .9rem;border-radius:8px;">Login</a>
+    <a href="/register" class="btn-nav-start" style="background:linear-gradient(135deg,#38bdf8,#6366f1);padding:.4rem 1.1rem;border-radius:8px;color:#fff;font-weight:700;">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div>
+      <div class="hero-badge">🧬 AI-Powered Hereditary Analysis</div>
+      <h1>Predict Your <span>Hereditary</span> Disease Risk</h1>
+      <p>GeneTrace analyzes your multi-generational family medical history using ensemble machine learning to estimate hereditary disease risk and deliver personalized preventive guidance.</p>
+      <div class="hero-btns">
+        <a href="/register" class="btn-primary">🚀 Start Free Assessment</a>
+        <a href="#how" class="btn-outline-w">Learn More</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-title">🧬 Live Risk Assessment</div>
+      <div class="risk-row">
+        <div class="risk-row-label"><span>Type 2 Diabetes</span><span>34%</span></div>
+        <div class="risk-bar-bg"><div class="risk-bar-fill fill-blue" style="width:34%"></div></div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-row-label"><span>Hypertension</span><span>52%</span></div>
+        <div class="risk-bar-bg"><div class="risk-bar-fill fill-orange" style="width:52%"></div></div>
+      </div>
+      <div class="risk-row">
+        <div class="risk-row-label"><span>Cardiovascular</span><span>18%</span></div>
+        <div class="risk-bar-bg"><div class="risk-bar-fill fill-purple" style="width:18%"></div></div>
+      </div>
+      <div class="hero-card-footer">✓ Powered by RF + XGBoost + MLP Ensemble</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stats-bar-inner">
+    <div><div class="stat-num">4</div><div class="stat-label">Diseases Predicted</div></div>
+    <div><div class="stat-num">97%</div><div class="stat-label">Diabetes Model Accuracy</div></div>
+    <div><div class="stat-num">6</div><div class="stat-label">ML Models</div></div>
+    <div><div class="stat-num">SHAP</div><div class="stat-label">Explainable AI</div></div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-inner">
+    <div class="section-tag">Why GeneTrace</div>
+    <h2 class="section-title">Research-Grade Hereditary Analysis</h2>
+    <p class="section-sub">Built for IEEE-quality analysis with cutting-edge ML and explainability</p>
+    <div class="features-grid">
+      <div class="feat-card"><div class="feat-icon">🧬</div><h3>Pedigree Analysis</h3><p>Multi-generational family history covering parents and grandparents with disease severity and onset age weighting.</p></div>
+      <div class="feat-card"><div class="feat-icon">🤖</div><h3>Ensemble AI</h3><p>Random Forest + XGBoost + MLP combined with soft voting for robust, accurate hereditary risk prediction.</p></div>
+      <div class="feat-card"><div class="feat-icon">🔍</div><h3>Explainable AI</h3><p>SHAP-powered explanations show exactly which family history factors drive your predicted risk score.</p></div>
+      <div class="feat-card"><div class="feat-icon">💊</div><h3>RAG Recommendations</h3><p>Personalized preventive guidance retrieved from WHO, NIH, and CDC medical knowledge bases.</p></div>
+      <div class="feat-card"><div class="feat-icon">📊</div><h3>Onset Prediction</h3><p>Estimates the probable age of disease onset based on your family's hereditary patterns and PWIS score.</p></div>
+      <div class="feat-card"><div class="feat-icon">📄</div><h3>PDF Reports</h3><p>Download professional health reports with full risk analysis, SHAP explanations, and recommendations.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- DISEASES -->
+<section class="diseases-section" id="diseases">
+  <div class="section-inner">
+    <div class="section-tag">Coverage</div>
+    <h2 class="section-title">4 Hereditary Diseases Covered</h2>
+    <p class="section-sub">Comprehensive risk prediction across the most common hereditary conditions</p>
+    <div class="disease-grid">
+      <div class="disease-card d1"><div class="disease-icon">🩸</div><h3>Type 2 Diabetes</h3><p>Hereditary risk from parental and grandparental diabetes history with PWIS severity weighting.</p></div>
+      <div class="disease-card d2"><div class="disease-icon">❤️</div><h3>Hypertension</h3><p>Blood pressure risk driven by family history, lifestyle factors, and the PWIS inheritance score.</p></div>
+      <div class="disease-card d3"><div class="disease-icon">🫀</div><h3>Cardiovascular Disease</h3><p>Heart disease risk from paternal and maternal cardiac history with early-onset detection.</p></div>
+      <div class="disease-card d4"><div class="disease-icon">💇</div><h3>Androgenetic Alopecia</h3><p>Hair loss risk using Norwood scale staging based on paternal and maternal inheritance patterns.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- IMAGE SECTION -->
+<section class="img-section">
+  <div class="img-section-inner">
+    <img src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&q=80" alt="Medical Research">
+    <div class="img-section-text">
+      <div class="section-tag">Research Novelty</div>
+      <h2>The PWIS Scoring Mechanism</h2>
+      <p>The Phenotype-Weighted Inheritance Scoring Mechanism (PWIS) is the core research contribution of GeneTrace. It quantifies hereditary burden by combining lineage weight, disease severity, and age of onset into a single interpretable score.</p>
+      <ul class="check-list">
+        <li>Parent lineage weight = 1.0 | Grandparent = 0.5</li>
+        <li>Severity: None=0 · Mild=0.25 · Moderate=0.60 · Severe=1.0</li>
+        <li>Early onset (&lt;45 yrs) weighted 1.0 vs late onset 0.3</li>
+        <li>Paternal and maternal scores computed independently</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-inner">
+    <div class="section-tag">Process</div>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">Four simple steps to your hereditary risk assessment</p>
+    <div class="steps-grid">
+      <div class="step-card"><div class="step-num">1</div><h3>Register</h3><p>Create your secure account to get started with GeneTrace in seconds.</p></div>
+      <div class="step-card"><div class="step-num">2</div><h3>Family History</h3><p>Input your parents' and grandparents' medical history including diseases, severity, and onset age.</p></div>
+      <div class="step-card"><div class="step-num">3</div><h3>Personal Info</h3><p>Provide your age, BMI, and lifestyle factors like smoking, exercise, and stress level.</p></div>
+      <div class="step-card"><div class="step-num">4</div><h3>Get Your Report</h3><p>Receive AI-powered risk predictions, SHAP explanations, and personalized recommendations.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-bg"></div>
+  <div class="cta-overlay"></div>
+  <div class="cta-content">
+    <h2>Ready to Know Your Hereditary Risk?</h2>
+    <p>Join GeneTrace and take the first step toward preventive healthcare powered by AI.</p>
+    <a href="/register" class="btn-primary" style="display:inline-flex;margin:0 auto;">🚀 Create Free Account</a>
+  </div>
+</section>
+
+<footer>
+  <p>© 2024 GeneTrace · IEEE Final Year Research Project · Not a medical diagnosis tool · <a href="/about">About</a></p>
+</footer>
+</body>
+</html>

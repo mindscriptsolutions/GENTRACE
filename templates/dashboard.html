@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard – GeneTrace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/layout.js"></script>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="/dashboard">Home</a> › Dashboard</div>
+  <h1>Welcome back, <span id="user-name" style="color:var(--accent)">User</span> 👋</h1>
+  <p>Your hereditary disease risk overview</p>
+</div>
+
+<div class="stats-grid" id="stats-grid">
+  <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-info"><h3 id="stat-total">—</h3><p>Total Predictions</p></div></div>
+  <div class="stat-card warning"><div class="stat-icon">🩸</div><div class="stat-info"><h3 id="stat-diabetes">—</h3><p>Latest Diabetes Risk</p></div></div>
+  <div class="stat-card danger"><div class="stat-icon">🫀</div><div class="stat-info"><h3 id="stat-heart">—</h3><p>Latest Heart Risk</p></div></div>
+  <div class="stat-card success"><div class="stat-icon">❤️</div><div class="stat-info"><h3 id="stat-hyp">—</h3><p>Latest Hypertension Risk</p></div></div>
+</div>
+
+<div class="card mb-2">
+  <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+    <a href="/family"   class="btn btn-primary">👨👩👧 Enter Family History</a>
+    <a href="/personal" class="btn btn-accent">👤 Personal Health Info</a>
+    <a href="/history"  class="btn btn-outline">📋 View History</a>
+    <a href="/profile"  class="btn btn-ghost">⚙️ Profile Settings</a>
+  </div>
+</div>
+
+<div id="risk-section" class="hidden">
+  <h3 style="margin-bottom:1rem;color:#fff;">Latest Risk Assessment</h3>
+  <div class="risk-grid" id="risk-cards"></div>
+</div>
+
+<div id="no-pred" class="card text-center" style="padding:3rem;">
+  <div style="font-size:3.5rem;margin-bottom:1rem;">🧬</div>
+  <h3>No Predictions Yet</h3>
+  <p class="mt-2" style="max-width:400px;margin:0 auto;">Start by entering your family history and personal health information to get your hereditary risk assessment.</p>
+  <a href="/family" class="btn btn-primary mt-3" style="margin-top:1.5rem;">Get Started →</a>
+</div>
+
+<div class="card mt-3" id="history-card" style="display:none;">
+  <div class="card-header">
+    <span class="card-title">Recent Predictions</span>
+    <a href="/history" class="btn btn-ghost btn-sm">View All →</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Diabetes</th><th>Hypertension</th><th>Heart</th><th>Hair Loss</th><th>Action</th></tr></thead>
+      <tbody id="history-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+Auth.requireAuth();
+injectLayout('/dashboard');
+const user = Auth.getUser();
+document.getElementById('user-name').textContent = user?.full_name?.split(' ')[0] || 'User';
+
+async function loadDashboard() {
+  try {
+    const history = await apiFetch('/history/');
+    document.getElementById('stat-total').textContent = history.length;
+    if (history.length > 0) {
+      const latest = history[0];
+      document.getElementById('stat-diabetes').textContent = (latest.diabetes_risk * 100).toFixed(1) + '%';
+      document.getElementById('stat-heart').textContent    = (latest.heart_risk * 100).toFixed(1) + '%';
+      document.getElementById('stat-hyp').textContent      = (latest.hypertension_risk * 100).toFixed(1) + '%';
+      document.getElementById('no-pred').classList.add('hidden');
+      document.getElementById('risk-section').classList.remove('hidden');
+      document.getElementById('history-card').style.display = '';
+      const diseases = [
+        { name:'Diabetes',     pct: latest.diabetes_risk*100,     icon:'🩸' },
+        { name:'Hypertension', pct: latest.hypertension_risk*100, icon:'❤️' },
+        { name:'Heart Disease',pct: latest.heart_risk*100,        icon:'🫀' },
+        { name:'Hair Loss',    pct: (latest.hair_loss_norwood/7)*100, icon:'💇', norwood: latest.hair_loss_norwood },
+      ];
+      document.getElementById('risk-cards').innerHTML = diseases.map(d => {
+        const lvl = riskLevel(d.pct);
+        const display = d.norwood ? `Stage ${d.norwood}` : d.pct.toFixed(1) + '%';
+        return `<div class="risk-card ${lvl}">
+          <div class="risk-icon">${d.icon}</div>
+          <div class="risk-name">${d.name}</div>
+          <div class="risk-pct ${lvl}">${display}</div>
+          <span class="badge badge-${lvl}" style="margin-top:.4rem;">${lvl.charAt(0).toUpperCase()+lvl.slice(1)}</span>
+        </div>`;
+      }).join('');
+      document.getElementById('history-tbody').innerHTML = history.slice(0,5).map(h => `
+        <tr>
+          <td>${fmtDate(h.predicted_at)}</td>
+          <td>${riskLabel(h.diabetes_risk*100)}</td>
+          <td>${riskLabel(h.hypertension_risk*100)}</td>
+          <td>${riskLabel(h.heart_risk*100)}</td>
+          <td><span class="badge badge-info">Stage ${h.hair_loss_norwood}</span></td>
+          <td><a href="/history" class="btn btn-ghost btn-sm">View</a></td>
+        </tr>`).join('');
+    }
+  } catch(e) { console.error(e); }
+}
+loadDashboard();
+</script>
+</body>
+</html>

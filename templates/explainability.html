@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Explainable AI – GeneTrace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.shap-row{display:flex;align-items:center;gap:.75rem;margin-bottom:.65rem;padding:.4rem .5rem;border-radius:8px;transition:background .15s}
+.shap-row:hover{background:rgba(255,255,255,.03)}
+.shap-feature{width:240px;font-size:.8rem;color:var(--text);text-align:right;flex-shrink:0;font-weight:500}
+.shap-bar-wrap{flex:1;position:relative;height:20px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.shap-bar-pos{height:100%;background:linear-gradient(90deg,#38bdf8,#6366f1);border-radius:4px;transition:width 1s ease}
+.shap-bar-neg{height:100%;background:linear-gradient(90deg,#ef4444,#f97316);border-radius:4px;transition:width 1s ease}
+.shap-num{width:70px;font-size:.78rem;font-weight:700;text-align:left;flex-shrink:0}
+.shap-num.pos{color:#38bdf8}.shap-num.neg{color:#f87171}
+.legend{display:flex;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted)}
+.legend-dot{width:14px;height:14px;border-radius:3px}
+.pwis-box{background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.12);border-radius:10px;padding:1rem;text-align:center}
+.pwis-box .val{font-size:1.6rem;font-weight:800;color:var(--accent)}
+.pwis-box .lbl{font-size:.75rem;color:var(--muted);margin-top:.2rem}
+.pwis-box .sub{font-size:.68rem;color:rgba(255,255,255,.2);margin-top:.15rem}
+</style>
+</head>
+<body>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/layout.js"></script>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="/dashboard">Dashboard</a> › <a href="/result">Result</a> › Explainable AI</div>
+  <h1>Explainable AI – SHAP Analysis</h1>
+  <p>Understanding why the model predicted your hereditary risk</p>
+</div>
+
+<div id="no-result" class="card text-center" style="padding:3rem;display:none;">
+  <div style="font-size:3rem;margin-bottom:1rem;">🔍</div>
+  <h3>No Prediction Available</h3>
+  <p style="margin-top:.5rem;">Run a prediction first to see the SHAP explanation.</p>
+  <a href="/family" class="btn btn-primary" style="margin-top:1.5rem;">Start Assessment</a>
+</div>
+
+<div id="shap-content">
+  <div class="card mb-2">
+    <div class="card-header"><span class="card-title">ℹ What is SHAP?</span></div>
+    <p style="font-size:.88rem;line-height:1.7;">SHAP (SHapley Additive exPlanations) assigns each feature an importance value for a particular prediction. <span style="color:#38bdf8;font-weight:600;">Blue bars</span> indicate features that <em>increase</em> your risk. <span style="color:#f87171;font-weight:600;">Red bars</span> indicate features that <em>decrease</em> your risk.</p>
+  </div>
+
+  <div class="card mb-2">
+    <div class="card-header"><span class="card-title">🔍 Top Contributing Features – Diabetes Risk Model</span></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#38bdf8,#6366f1);"></div><span>Increases risk (positive SHAP)</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#ef4444,#f97316);"></div><span>Decreases risk (negative SHAP)</span></div>
+    </div>
+    <div id="shap-chart"></div>
+  </div>
+
+  <div class="card mb-2">
+    <div class="card-header"><span class="card-title">📋 Feature Interpretation Guide</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Feature</th><th>Description</th><th>Impact</th></tr></thead>
+        <tbody id="feature-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">🧬 PWIS Contribution Summary</span></div>
+    <div id="pwis-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;"></div>
+  </div>
+</div>
+
+<script>
+Auth.requireAuth();
+injectLayout('/explainability');
+
+const FEATURE_LABELS = {
+  'PWIS_Diabetes':'Phenotype-Weighted Inheritance Score (Diabetes)','PWIS_HeartDisease':'Phenotype-Weighted Inheritance Score (Heart)',
+  'Father_Diabetes':'Father has Diabetes','Mother_Diabetes':'Mother has Diabetes',
+  'Father_Hypertension':'Father has Hypertension','Mother_Hypertension':'Mother has Hypertension',
+  'Father_HeartDisease':'Father has Heart Disease','Mother_HeartDisease':'Mother has Heart Disease',
+  'Paternal_Grandfather_Diabetes':'Paternal Grandfather – Diabetes','Paternal_Grandmother_Diabetes':'Paternal Grandmother – Diabetes',
+  'Maternal_Grandfather_Diabetes':'Maternal Grandfather – Diabetes','Maternal_Grandmother_Diabetes':'Maternal Grandmother – Diabetes',
+  'Father_Diabetes_Severity':'Father Diabetes Severity (0–3)','Mother_Diabetes_Severity':'Mother Diabetes Severity (0–3)',
+  'Father_Heart_Severity':'Father Heart Disease Severity (0–3)','Mother_Heart_Severity':'Mother Heart Disease Severity (0–3)',
+  'Father_Diabetes_Onset':'Father Diabetes Onset Age','Mother_Diabetes_Onset':'Mother Diabetes Onset Age',
+  'Father_Heart_Onset':'Father Heart Disease Onset Age','Mother_Heart_Onset':'Mother Heart Disease Onset Age',
+  'Paternal_Score':'Paternal Lineage Score','Maternal_Score':'Maternal Lineage Score',
+  'Family_Disease_Count':'Total Family Disease Count','BMI':'Body Mass Index','Age':'Age',
+  'Smoker':'Smoking Status','Alcohol':'Alcohol Consumption','Exercise_Level':'Exercise Level',
+  'Diet_Quality':'Diet Quality','Sleep_Hours':'Average Sleep Hours','Stress_Level':'Stress Level',
+  'Gender':'Gender','Father_HairLoss':'Father has Hair Loss','Mother_HairLoss':'Mother has Hair Loss',
+  'Paternal_Grandfather_HairLoss':'Paternal Grandfather – Hair Loss','Maternal_Grandfather_HairLoss':'Maternal Grandfather – Hair Loss',
+};
+const FEATURE_IMPACT = {
+  'PWIS_Diabetes':'High – core hereditary score','Father_Diabetes':'High – 1st degree relative',
+  'Mother_Diabetes':'High – 1st degree relative','BMI':'Moderate – modifiable lifestyle factor',
+  'Smoker':'Moderate – modifiable lifestyle factor','Paternal_Score':'Moderate – paternal lineage burden',
+  'Maternal_Score':'Moderate – maternal lineage burden',
+};
+
+const pred = PredStore.load();
+if (!pred || !pred.shap_values || Object.keys(pred.shap_values).length === 0) {
+  document.getElementById('no-result').style.display = '';
+  document.getElementById('shap-content').style.display = 'none';
+} else {
+  renderSHAP(pred.shap_values, pred);
+}
+
+function renderSHAP(shap, pred) {
+  const entries = Object.entries(shap).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const maxAbs  = Math.max(...entries.map(([,v]) => Math.abs(v)));
+  document.getElementById('shap-chart').innerHTML = entries.map(([feat, val]) => {
+    const pct = (Math.abs(val) / maxAbs * 100).toFixed(1);
+    const isPos = val >= 0;
+    const label = FEATURE_LABELS[feat] || feat.replace(/_/g,' ');
+    return `<div class="shap-row">
+      <div class="shap-feature">${label}</div>
+      <div class="shap-bar-wrap"><div class="${isPos?'shap-bar-pos':'shap-bar-neg'}" style="width:0%" data-target="${pct}%"></div></div>
+      <div class="shap-num ${isPos?'pos':'neg'}">${isPos?'+':''}${val.toFixed(4)}</div>
+    </div>`;
+  }).join('');
+  setTimeout(() => { document.querySelectorAll('.shap-bar-pos,.shap-bar-neg').forEach(el => el.style.width = el.dataset.target); }, 100);
+
+  document.getElementById('feature-table').innerHTML = entries.map(([feat, val]) => {
+    const label  = FEATURE_LABELS[feat] || feat.replace(/_/g,' ');
+    const impact = FEATURE_IMPACT[feat] || (Math.abs(val) > 0.05 ? 'Notable' : 'Minor');
+    const dir    = val >= 0 ? '<span style="color:#f87171;">↑ Increases risk</span>' : '<span style="color:#4ade80;">↓ Decreases risk</span>';
+    return `<tr><td>${label}</td><td>${impact}</td><td>${dir}</td></tr>`;
+  }).join('');
+
+  document.getElementById('pwis-summary').innerHTML = `
+    <div class="pwis-box"><div class="val">${pred.pwis_diabetes.toFixed(4)}</div><div class="lbl">PWIS Diabetes</div><div class="sub">Σ[lineage × (severity + onset)]</div></div>
+    <div class="pwis-box"><div class="val">${pred.pwis_heart.toFixed(4)}</div><div class="lbl">PWIS Heart Disease</div><div class="sub">Parent=1.0 | Grandparent=0.5</div></div>
+    <div class="pwis-box"><div class="val">${pred.family_disease_count}</div><div class="lbl">Family Disease Count</div><div class="sub">Total affected relatives</div></div>
+  `;
+}
+</script>
+</body>
+</html>

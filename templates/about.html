@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About – GeneTrace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0a0f1e;color:#e2e8f0;line-height:1.6}
+a{text-decoration:none;color:inherit}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:68px;background:rgba(10,15,30,.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07)}
+.brand{font-size:1.3rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:.4rem}
+.brand span{color:#38bdf8}
+.nav-links{display:flex;align-items:center;gap:.25rem}
+.nav-links a{color:rgba(255,255,255,.6);padding:.4rem .9rem;border-radius:8px;font-size:.88rem;font-weight:500;transition:all .2s}
+.nav-links a:hover,.nav-links a.active{background:rgba(255,255,255,.1);color:#fff}
+.btn-login{border:1.5px solid rgba(255,255,255,.2);padding:.4rem .9rem;border-radius:8px;color:rgba(255,255,255,.8)!important}
+
+/* HERO */
+.about-hero{position:relative;padding:8rem 2.5rem 5rem;text-align:center;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1400&q=80') center/cover no-repeat;filter:brightness(.18)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,15,30,.7) 0%,rgba(10,15,30,1) 100%)}
+.hero-content{position:relative;z-index:1;max-width:700px;margin:0 auto}
+.hero-tag{display:inline-block;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#38bdf8;padding:.3rem .85rem;border-radius:99px;font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1rem}
+.about-hero h1{font-size:2.8rem;font-weight:800;color:#fff;margin-bottom:1rem;line-height:1.15}
+.about-hero h1 span{background:linear-gradient(135deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.about-hero p{color:rgba(255,255,255,.55);font-size:1.05rem;max-width:580px;margin:0 auto}
+
+/* SECTIONS */
+.section{padding:5rem 2.5rem}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-tag{display:inline-block;background:rgba(56,189,248,.1);color:#38bdf8;padding:.3rem .85rem;border-radius:99px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.75rem}
+.section-title{font-size:1.9rem;font-weight:800;color:#fff;margin-bottom:.5rem}
+.section-sub{color:rgba(255,255,255,.4);font-size:.95rem;max-width:560px}
+
+/* METHOD GRID */
+.method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-top:3rem}
+.method-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:1.75rem;border-top:2px solid rgba(56,189,248,.3);transition:transform .2s}
+.method-card:hover{transform:translateY(-3px);background:rgba(255,255,255,.05)}
+.method-card h3{color:#38bdf8;font-size:1rem;font-weight:700;margin-bottom:.5rem}
+.method-card p{color:rgba(255,255,255,.45);font-size:.85rem;line-height:1.7}
+
+/* PWIS FORMULA */
+.formula-section{padding:5rem 2.5rem;background:rgba(255,255,255,.015)}
+.formula-box{background:rgba(56,189,248,.04);border:1px solid rgba(56,189,248,.15);border-radius:16px;padding:2rem;margin-top:2rem;max-width:700px}
+.formula-box pre{font-family:'Courier New',monospace;font-size:.88rem;color:rgba(255,255,255,.65);line-height:2;white-space:pre-wrap}
+.formula-box pre strong{color:#38bdf8}
+
+/* IMAGE + TEXT */
+.split-section{padding:5rem 2.5rem}
+.split-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.split-inner img{border-radius:20px;width:100%;height:360px;object-fit:cover;border:1px solid rgba(255,255,255,.07)}
+.check-list{list-style:none;display:flex;flex-direction:column;gap:.65rem;margin-top:1.25rem}
+.check-list li{display:flex;align-items:flex-start;gap:.65rem;color:rgba(255,255,255,.6);font-size:.88rem;line-height:1.5}
+.check-dot{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;font-size:.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.15rem}
+
+/* TABLE */
+.table-section{padding:5rem 2.5rem;background:rgba(255,255,255,.015)}
+.table-wrap{overflow-x:auto;margin-top:2rem}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+thead th{background:rgba(56,189,248,.08);color:rgba(255,255,255,.5);padding:.75rem 1rem;text-align:left;font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(255,255,255,.07)}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody td{padding:.75rem 1rem;color:rgba(255,255,255,.65)}
+tbody td:first-child{color:#fff;font-weight:600}
+.highlight{color:#38bdf8!important;font-weight:700!important}
+
+/* DISCLAIMER */
+.disclaimer{padding:4rem 2.5rem;text-align:center;background:linear-gradient(135deg,rgba(56,189,248,.06),rgba(99,102,241,.04));border-top:1px solid rgba(255,255,255,.06)}
+.disclaimer h2{font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:.75rem}
+.disclaimer p{color:rgba(255,255,255,.45);max-width:680px;margin:0 auto;font-size:.92rem;line-height:1.8}
+
+/* FOOTER */
+footer{background:rgba(255,255,255,.02);border-top:1px solid rgba(255,255,255,.06);padding:1.75rem 2.5rem;text-align:center;color:rgba(255,255,255,.25);font-size:.82rem}
+
+@media(max-width:900px){
+  .split-inner{grid-template-columns:1fr}
+  .split-inner img{height:220px}
+  nav .nav-links{display:none}
+  .about-hero h1{font-size:2rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">🧬 Gene<span>Trace</span></div>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/about" class="active">About</a>
+    <a href="/login" class="btn-login">Login</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="about-hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-tag">IEEE Research Project</div>
+    <h1>About <span>GeneTrace</span></h1>
+    <p>A research-grade AI system for hereditary disease risk prediction using pedigree analysis and ensemble machine learning.</p>
+  </div>
+</div>
+
+<!-- OVERVIEW + METHOD CARDS -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-tag">Overview</div>
+    <h2 class="section-title">Project Overview</h2>
+    <p style="color:rgba(255,255,255,.5);font-size:.95rem;line-height:1.8;max-width:800px;margin-top:.75rem;">
+      GeneTrace is an IEEE-quality final-year research project that predicts hereditary disease risk by analyzing multi-generational family medical history. The system combines paternal and maternal inheritance patterns with personal lifestyle factors to generate risk estimates for Type 2 Diabetes, Hypertension, Cardiovascular Disease, and Androgenetic Alopecia.
+    </p>
+    <div class="method-grid">
+      <div class="method-card">
+        <h3>🧬 Research Novelty</h3>
+        <p>The <strong style="color:#fff;">Phenotype-Weighted Inheritance Scoring Mechanism (PWIS)</strong> is the core contribution. It quantifies hereditary burden by combining lineage weight, disease severity, and age of onset into a single interpretable score.</p>
+      </div>
+      <div class="method-card">
+        <h3>🤖 Ensemble Learning</h3>
+        <p>Three models — Random Forest, XGBoost, and MLP — are combined using soft-voting ensemble strategy. Each model contributes its probability estimate, and the final prediction is the weighted average.</p>
+      </div>
+      <div class="method-card">
+        <h3>🔍 Explainable AI</h3>
+        <p>SHAP (SHapley Additive exPlanations) provides feature-level explanations for every prediction, identifying which family history factors most strongly influence the hereditary risk estimate.</p>
+      </div>
+      <div class="method-card">
+        <h3>💊 RAG Recommendations</h3>
+        <p>A Retrieval-Augmented Generation pipeline retrieves relevant passages from WHO, NIH, and CDC knowledge bases to generate personalized preventive recommendations.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PWIS FORMULA -->
+<div class="formula-section">
+  <div class="section-inner">
+    <div class="section-tag">Core Formula</div>
+    <h2 class="section-title">PWIS Formula</h2>
+    <p class="section-sub">The mathematical foundation of GeneTrace's hereditary scoring mechanism</p>
+    <div class="formula-box">
+      <pre><strong>PWIS = Σ [ lineage_weight × (severity_weight + onset_weight) ]</strong>
+
+Lineage Weights:
+  Parent (1st degree)      = 1.0
+  Grandparent (2nd degree) = 0.5
+
+Severity Weights:
+  None     = 0.00  |  Mild     = 0.25
+  Moderate = 0.60  |  Severe   = 1.00
+
+Onset Weights:
+  Early onset  (&lt; 45 years)  = 1.0
+  Mid onset    (45–59 years) = 0.6
+  Late onset   (≥ 60 years)  = 0.3
+  No disease   (onset = 0)   = 0.0</pre>
+    </div>
+  </div>
+</div>
+
+<!-- SPLIT IMAGE SECTION -->
+<section class="split-section">
+  <div class="split-inner">
+    <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80" alt="Medical AI Research">
+    <div>
+      <div class="section-tag">Architecture</div>
+      <h2 class="section-title" style="font-size:1.7rem;">How the System Works</h2>
+      <p style="color:rgba(255,255,255,.5);font-size:.9rem;margin-top:.5rem;line-height:1.8;">GeneTrace combines pedigree-based feature engineering with ensemble machine learning to deliver accurate, explainable hereditary risk predictions.</p>
+      <ul class="check-list">
+        <li><div class="check-dot">✓</div>Family history collected across 2 generations (parents + grandparents)</li>
+        <li><div class="check-dot">✓</div>PWIS scores computed for diabetes and heart disease</li>
+        <li><div class="check-dot">✓</div>Interaction features engineered for each disease model</li>
+        <li><div class="check-dot">✓</div>Ensemble of RF + XGBoost + MLP with soft voting</li>
+        <li><div class="check-dot">✓</div>SHAP TreeExplainer on XGBoost base estimator</li>
+        <li><div class="check-dot">✓</div>RAG retrieval from WHO/NIH/CDC knowledge base</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- MODEL PERFORMANCE TABLE -->
+<section class="table-section">
+  <div class="section-inner">
+    <div class="section-tag">Performance</div>
+    <h2 class="section-title">Model Performance</h2>
+    <p class="section-sub">Evaluation metrics across all 6 trained models</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Model</th><th>Accuracy</th><th>F1 Score</th><th>ROC-AUC</th><th>Training Data</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Diabetes Ensemble</td><td class="highlight">97.35%</td><td>0.8215</td><td class="highlight">0.9646</td><td>Public + Pedigree</td></tr>
+          <tr><td>Hypertension Ensemble</td><td class="highlight">80.84%</td><td>0.7957</td><td class="highlight">0.8776</td><td>Pedigree (PWIS-based)</td></tr>
+          <tr><td>Heart Disease Ensemble</td><td class="highlight">81.53%</td><td>0.8072</td><td class="highlight">0.8924</td><td>Pedigree (PWIS-based)</td></tr>
+          <tr><td>Hair Loss Ensemble</td><td class="highlight">80.29%</td><td>0.8040</td><td class="highlight">0.8706</td><td>Pedigree (Binary)</td></tr>
+          <tr><td>Onset Diabetes (Regression)</td><td>—</td><td>—</td><td>MAE: 5.52 yrs</td><td>Pedigree</td></tr>
+          <tr><td>Onset Heart (Regression)</td><td>—</td><td>—</td><td>MAE: 4.38 yrs</td><td>Pedigree</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  <h2>⚠ Important Disclaimer</h2>
+  <p>GeneTrace provides hereditary risk estimates only. It is not a medical diagnosis system and does not use DNA sequencing or genomic analysis. All predictions are probabilistic estimates based on family history patterns. Always consult a qualified healthcare professional for medical advice.</p>
+</div>
+
+<footer>
+  <p>© 2024 GeneTrace · IEEE Final Year Research Project · Not a medical diagnosis tool</p>
+</footer>
+
+</body>
+</html>

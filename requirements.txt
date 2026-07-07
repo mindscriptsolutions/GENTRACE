@@ -1,0 +1,40 @@
+# GeneTrace – Hereditary Disease Risk Prediction System
+# Python 3.13+ required
+
+# Web Framework
+fastapi==0.121.3
+uvicorn==0.38.0
+python-multipart==0.0.20
+aiofiles==24.1.0
+
+# Database
+sqlalchemy==2.0.46
+
+# Authentication
+passlib==1.7.4
+bcrypt==4.0.1
+python-jose==3.5.0
+
+# Data & ML
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+xgboost==3.1.3
+joblib==1.5.2
+
+# SHAP Explainability
+shap==0.50.0
+
+# Numba (required by SHAP on Python 3.13)
+numba==0.66.0
+llvmlite==0.48.0
+
+# PDF Report Generation
+reportlab==5.0.0
+
+# Email Validation
+email-validator==2.3.0
+
+# Utilities
+python-dotenv==1.1.1
+pydantic==2.12.4

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile – GeneTrace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/layout.js"></script>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="/dashboard">Dashboard</a> › Profile</div>
+  <h1>Account Settings</h1>
+  <p>Manage your GeneTrace account</p>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:900px;">
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">👤 Profile Information</span></div>
+    <div id="profile-alert"></div>
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#6366f1);color:#fff;font-size:1.8rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto;" id="avatar-big">U</div>
+      <h3 style="margin-top:.75rem;" id="profile-name">—</h3>
+      <p id="profile-email" style="font-size:.82rem;"></p>
+      <p id="profile-since" style="font-size:.75rem;color:rgba(255,255,255,.25);margin-top:.2rem;"></p>
+    </div>
+    <form id="profile-form">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control" id="full_name" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="profile-btn">Update Name</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">🔒 Change Password</span></div>
+    <div id="pw-alert"></div>
+    <form id="pw-form">
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" class="form-control" id="new_pw" placeholder="Min. 6 characters" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input type="password" class="form-control" id="confirm_pw" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="pw-btn">Update Password</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">📊 Account Statistics</span></div>
+    <div class="stats-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-info"><h3 id="stat-preds">—</h3><p>Predictions</p></div></div>
+      <div class="stat-card success"><div class="stat-icon">👨‍👩‍👧</div><div class="stat-info"><h3 id="stat-members">—</h3><p>Family Members</p></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(239,68,68,.25);">
+    <div class="card-header"><span class="card-title" style="color:var(--danger);">⚠ Danger Zone</span></div>
+    <p style="font-size:.85rem;margin-bottom:1rem;">Permanently delete your account and all associated data. This action cannot be undone.</p>
+    <button class="btn btn-danger" id="delete-btn">Delete My Account</button>
+  </div>
+</div>
+
+<script>
+Auth.requireAuth();
+injectLayout('/profile');
+
+async function loadProfile() {
+  try {
+    const user = await apiFetch('/profile/');
+    document.getElementById('avatar-big').textContent = user.full_name?.charAt(0).toUpperCase() || 'U';
+    document.getElementById('profile-name').textContent  = user.full_name;
+    document.getElementById('profile-email').textContent = user.email;
+    document.getElementById('profile-since').textContent = 'Member since ' + new Date(user.created_at).toLocaleDateString();
+    document.getElementById('full_name').value = user.full_name;
+    Auth.setSession(Auth.getToken(), user);
+    const history = await apiFetch('/history/');
+    document.getElementById('stat-preds').textContent = history.length;
+    const fam = JSON.parse(localStorage.getItem('gt_family') || '{}');
+    document.getElementById('stat-members').textContent = Object.keys(fam).length > 0 ? 6 : 0;
+  } catch(e) { console.error(e); }
+}
+
+document.getElementById('profile-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('profile-btn');
+  const alertBox = document.getElementById('profile-alert');
+  setBtn(btn, true, 'Saving...');
+  try {
+    const user = await apiFetch('/profile/', { method:'PUT', body: JSON.stringify({ full_name: document.getElementById('full_name').value.trim() }) });
+    Auth.setSession(Auth.getToken(), user);
+    alertBox.innerHTML = '<div class="alert alert-success">✓ Name updated successfully!</div>';
+    loadProfile();
+  } catch(e) { alertBox.innerHTML = `<div class="alert alert-danger">⚠ ${e.message}</div>`; }
+  setBtn(btn, false, 'Update Name');
+});
+
+document.getElementById('pw-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('pw-btn');
+  const alertBox = document.getElementById('pw-alert');
+  const pw = document.getElementById('new_pw').value;
+  const cf = document.getElementById('confirm_pw').value;
+  if (pw !== cf) { alertBox.innerHTML = '<div class="alert alert-danger">⚠ Passwords do not match.</div>'; return; }
+  setBtn(btn, true, 'Updating...');
+  try {
+    await apiFetch('/profile/', { method:'PUT', body: JSON.stringify({ password: pw }) });
+    alertBox.innerHTML = '<div class="alert alert-success">✓ Password updated successfully!</div>';
+    document.getElementById('pw-form').reset();
+  } catch(e) { alertBox.innerHTML = `<div class="alert alert-danger">⚠ ${e.message}</div>`; }
+  setBtn(btn, false, 'Update Password');
+});
+
+document.getElementById('delete-btn').addEventListener('click', async () => {
+  if (!confirm('Are you sure? This will permanently delete your account and all data.')) return;
+  if (!confirm('This cannot be undone. Confirm deletion?')) return;
+  try {
+    await apiFetch('/profile/', { method:'DELETE' });
+    Auth.clear();
+    window.location.href = '/';
+  } catch(e) { alert('Delete failed: ' + e.message); }
+});
+
+loadProfile();
+</script>
+</body>
+</html>

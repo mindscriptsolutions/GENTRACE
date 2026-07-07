@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recommendations – GeneTrace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.rec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;border-left:3px solid var(--accent)}
+.rec-card.danger{border-left-color:var(--danger)}
+.rec-card.warning{border-left-color:var(--warning)}
+.rec-card.success{border-left-color:var(--success)}
+.rec-card h4{color:#fff;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem;font-size:1rem}
+.rec-card ul{padding-left:1.2rem;display:flex;flex-direction:column;gap:.4rem}
+.rec-card li{font-size:.85rem;color:rgba(255,255,255,.6);line-height:1.6}
+</style>
+</head>
+<body>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/layout.js"></script>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="/dashboard">Dashboard</a> › <a href="/result">Result</a> › Recommendations</div>
+  <h1>Personalized Preventive Recommendations</h1>
+  <p>Evidence-based guidance from WHO, NIH, and CDC knowledge bases based on your hereditary risk profile</p>
+</div>
+
+<div id="no-result" class="card text-center" style="padding:3rem;display:none;">
+  <div style="font-size:3rem;margin-bottom:1rem;">💊</div>
+  <h3>No Recommendations Available</h3>
+  <p style="margin-top:.5rem;">Run a prediction first to receive personalized recommendations.</p>
+  <a href="/family" class="btn btn-primary" style="margin-top:1.5rem;">Start Assessment</a>
+</div>
+
+<div id="rec-content">
+  <div class="alert alert-info mb-2">
+    <span>ℹ</span>
+    <span>These recommendations are based on hereditary risk estimates only and do not constitute medical diagnosis. Always consult a qualified healthcare professional.</span>
+  </div>
+
+  <div id="rec-cards"></div>
+
+  <div class="card mt-3">
+    <div class="card-header"><span class="card-title">📄 Full Recommendation Report</span></div>
+    <pre id="rec-full" style="white-space:pre-wrap;font-family:'Inter',system-ui;font-size:.82rem;color:rgba(255,255,255,.5);line-height:1.8;"></pre>
+  </div>
+
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.5rem;">
+    <a href="/result" class="btn btn-outline">← Back to Results</a>
+    <button class="btn btn-success" id="download-btn">📄 Download PDF Report</button>
+  </div>
+</div>
+
+<script>
+Auth.requireAuth();
+injectLayout('/recommendations');
+
+const pred = PredStore.load();
+if (!pred) {
+  document.getElementById('no-result').style.display = '';
+  document.getElementById('rec-content').style.display = 'none';
+} else {
+  renderRecs(pred);
+}
+
+function renderRecs(p) {
+  const d = p.diabetes_risk * 100;
+  const h = p.hypertension_risk * 100;
+  const c = p.heart_risk * 100;
+  const cards = [
+    { icon:'🩸', title:'Diabetes Prevention', risk:d,
+      color: riskLevel(d)==='high'?'danger':riskLevel(d)==='moderate'?'warning':'success',
+      tips: d >= 30 ? [
+        'Schedule annual HbA1c and fasting glucose screening.',
+        'Aim for 150 minutes of moderate-intensity exercise per week.',
+        'Reduce refined carbohydrates and sugar-sweetened beverages.',
+        'Maintain BMI below 25 — a 5–7% weight loss reduces diabetes risk by 58% (CDC).',
+        'Consider Mediterranean-style diet rich in vegetables, legumes, and whole grains.',
+      ] : ['Your hereditary diabetes risk is currently low. Maintain a balanced diet and regular physical activity.']
+    },
+    { icon:'❤️', title:'Hypertension Management', risk:h,
+      color: riskLevel(h)==='high'?'danger':riskLevel(h)==='moderate'?'warning':'success',
+      tips: h >= 30 ? [
+        'Monitor blood pressure at home with a validated device.',
+        'Reduce sodium intake to less than 2,300 mg per day (AHA guideline).',
+        'Follow the DASH diet — reduces systolic BP by 8–14 mmHg.',
+        'Limit alcohol to ≤1 drink/day (women) or ≤2 drinks/day (men).',
+        'Practice stress reduction: meditation, yoga, or deep breathing exercises.',
+      ] : ['Your hereditary hypertension risk is currently low. Monitor blood pressure annually.']
+    },
+    { icon:'🫀', title:'Cardiovascular Protection', risk:c,
+      color: riskLevel(c)==='high'?'danger':riskLevel(c)==='moderate'?'warning':'success',
+      tips: c >= 30 ? [
+        'Get annual lipid panel — target LDL below 100 mg/dL for high-risk individuals.',
+        'Quit smoking — reduces cardiac event risk by 50% within one year.',
+        'Perform aerobic exercise ≥150 min/week to strengthen the heart.',
+        'Eat heart-healthy: reduce saturated fats, increase omega-3 fatty acids.',
+        'Control diabetes and hypertension as they directly damage coronary arteries.',
+      ] : ['Your hereditary cardiovascular risk is currently low. Avoid smoking and stay physically active.']
+    },
+    { icon:'💇', title:'Hair Loss (Androgenetic Alopecia)', risk:p.hair_loss_norwood/7*100,
+      color: p.hair_loss_norwood >= 3 ? 'warning' : 'success',
+      tips: p.hair_loss_norwood >= 3 ? [
+        `Current Norwood Stage: ${p.hair_loss_norwood} — ${norwood_label(p.hair_loss_norwood)}`,
+        'Early intervention at stages 2–3 yields the best treatment outcomes.',
+        'FDA-approved options: Minoxidil 5% (topical) and Finasteride 1mg (oral, men only).',
+        'Correct nutritional deficiencies: iron, zinc, biotin, and vitamin D.',
+        'Consult a dermatologist for personalized treatment planning.',
+      ] : ['No significant hereditary hair loss risk detected. Maintain good scalp health and nutrition.']
+    },
+  ];
+
+  document.getElementById('rec-cards').innerHTML = cards.map(card => `
+    <div class="rec-card ${card.color}">
+      <h4>${card.icon} ${card.title} — <span class="badge badge-${riskLevel(card.risk)}">${riskLevel(card.risk).toUpperCase()}</span></h4>
+      <ul>${card.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+    </div>`).join('');
+
+  document.getElementById('rec-full').textContent = p.recommendation || 'No recommendation text available.';
+}
+
+document.getElementById('download-btn')?.addEventListener('click', async () => {
+  try {
+    const history = await apiFetch('/history/');
+    if (!history.length) { alert('No prediction record found.'); return; }
+    window.open(`${API}/history/${history[0].id}/report?token=${Auth.getToken()}`, '_blank');
+  } catch(e) { alert('Could not generate report: ' + e.message); }
+});
+</script>
+</body>
+</html>

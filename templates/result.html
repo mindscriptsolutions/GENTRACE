@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prediction Result – GeneTrace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.overall-banner{background:linear-gradient(135deg,rgba(56,189,248,.12),rgba(99,102,241,.08));border:1px solid rgba(56,189,248,.2);border-radius:16px;padding:2rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+.overall-banner h2{color:#fff;font-size:1.3rem;margin-bottom:.25rem}
+.overall-banner p{color:var(--muted);font-size:.82rem}
+.overall-score{font-size:3.5rem;font-weight:800;background:linear-gradient(135deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.onset-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.onset-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center}
+.onset-age{font-size:2.2rem;font-weight:800;color:var(--accent)}
+.onset-card p{font-size:.78rem;color:var(--muted);margin-top:.25rem}
+.pwis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem}
+.pwis-card{background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.12);border-radius:10px;padding:1rem;text-align:center}
+.pwis-val{font-size:1.6rem;font-weight:800;color:var(--accent)}
+.pwis-card p{font-size:.75rem;color:var(--muted);margin-top:.2rem}
+@media(max-width:600px){.onset-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/layout.js"></script>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="/dashboard">Dashboard</a> › Prediction Result</div>
+  <h1>Hereditary Risk Prediction Results</h1>
+  <p>Based on your family pedigree and personal health information</p>
+</div>
+
+<div id="no-result" class="card text-center" style="padding:3rem;display:none;">
+  <div style="font-size:3rem;margin-bottom:1rem;">🎯</div>
+  <h3>No Prediction Available</h3>
+  <p style="margin-top:.5rem;">Please complete the family history and personal information forms first.</p>
+  <a href="/family" class="btn btn-primary" style="margin-top:1.5rem;">Start Assessment</a>
+</div>
+
+<div id="result-content">
+  <div class="overall-banner">
+    <div>
+      <h2>Overall Hereditary Risk Assessment</h2>
+      <p>Powered by Ensemble ML (RF + XGBoost + MLP) with SHAP Explainability</p>
+    </div>
+    <div style="text-align:center;">
+      <div class="overall-score" id="overall-score">—</div>
+      <div id="overall-badge" style="margin-top:.4rem;"></div>
+    </div>
+  </div>
+
+  <div class="risk-grid mb-2" id="risk-cards"></div>
+
+  <div class="card mb-2">
+    <div class="card-header"><span class="card-title">📊 Risk Score Breakdown</span></div>
+    <div id="progress-bars"></div>
+  </div>
+
+  <div class="onset-grid">
+    <div class="onset-card">
+      <div class="onset-age" id="onset-diabetes">—</div>
+      <p>Estimated Diabetes Onset Age</p>
+      <span class="badge badge-info" style="margin-top:.5rem;">Hereditary Estimate</span>
+    </div>
+    <div class="onset-card">
+      <div class="onset-age" id="onset-heart">—</div>
+      <p>Estimated Heart Disease Onset Age</p>
+      <span class="badge badge-info" style="margin-top:.5rem;">Hereditary Estimate</span>
+    </div>
+  </div>
+
+  <div class="card mb-2">
+    <div class="card-header"><span class="card-title">🧬 Phenotype-Weighted Inheritance Scores (PWIS)</span></div>
+    <p style="font-size:.82rem;margin-bottom:1rem;">PWIS = Σ [ lineage_weight × (severity_weight + onset_weight) ] — the core research contribution of GeneTrace.</p>
+    <div class="pwis-grid" id="pwis-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="card-title">⚡ Next Steps</span></div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+      <a href="/explainability" class="btn btn-primary">🔍 View SHAP Explanation</a>
+      <a href="/recommendations" class="btn btn-accent">💊 View Recommendations</a>
+      <button class="btn btn-success" id="download-btn">📄 Download PDF Report</button>
+      <a href="/family" class="btn btn-outline">🔄 New Assessment</a>
+    </div>
+  </div>
+</div>
+
+<script>
+Auth.requireAuth();
+injectLayout('/result');
+
+const pred = PredStore.load();
+if (!pred) {
+  document.getElementById('no-result').style.display = '';
+  document.getElementById('result-content').style.display = 'none';
+} else {
+  renderResult(pred);
+}
+
+function renderResult(p) {
+  const d = (p.diabetes_risk * 100).toFixed(1);
+  const h = (p.hypertension_risk * 100).toFixed(1);
+  const c = (p.heart_risk * 100).toFixed(1);
+  const overall = ((p.diabetes_risk + p.hypertension_risk + p.heart_risk) / 3 * 100).toFixed(1);
+  const ovLvl = riskLevel(overall);
+  document.getElementById('overall-score').textContent = overall + '%';
+  document.getElementById('overall-badge').innerHTML = `<span class="badge badge-${ovLvl}">${ovLvl.toUpperCase()} RISK</span>`;
+
+  const diseases = [
+    { name:'Type 2 Diabetes',    pct:+d, icon:'🩸' },
+    { name:'Hypertension',       pct:+h, icon:'❤️' },
+    { name:'Cardiovascular',     pct:+c, icon:'🫀' },
+    { name:'Hair Loss (Norwood)',pct:(p.hair_loss_norwood/7*100), icon:'💇', norwood:p.hair_loss_norwood },
+  ];
+  document.getElementById('risk-cards').innerHTML = diseases.map(d => {
+    const lvl = riskLevel(d.pct);
+    const display = d.norwood ? `Stage ${d.norwood}<br><small style="font-size:.7rem;font-weight:400;">${norwood_label(d.norwood)}</small>` : d.pct.toFixed(1) + '%';
+    return `<div class="risk-card ${lvl}">
+      <div class="risk-icon">${d.icon}</div>
+      <div class="risk-name">${d.name}</div>
+      <div class="risk-pct ${lvl}">${display}</div>
+      <span class="badge badge-${lvl}" style="margin-top:.4rem;">${lvl.charAt(0).toUpperCase()+lvl.slice(1)}</span>
+    </div>`;
+  }).join('');
+
+  const bars = [{ label:'Type 2 Diabetes', pct:+d }, { label:'Hypertension', pct:+h }, { label:'Cardiovascular', pct:+c }];
+  document.getElementById('progress-bars').innerHTML = bars.map(b => {
+    const lvl = riskLevel(b.pct);
+    return `<div class="progress-wrap">
+      <div class="progress-label"><span>${b.label}</span><span>${b.pct}%</span></div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill fill-${lvl}" style="width:0%" data-target="${b.pct}"></div></div>
+    </div>`;
+  }).join('');
+  setTimeout(() => { document.querySelectorAll('.progress-bar-fill').forEach(el => el.style.width = el.dataset.target + '%'); }, 100);
+
+  document.getElementById('onset-diabetes').textContent = p.onset_diabetes_years > 0 ? Math.round(p.onset_diabetes_years) + ' yrs' : 'N/A';
+  document.getElementById('onset-heart').textContent    = p.onset_heart_years > 0 ? Math.round(p.onset_heart_years) + ' yrs' : 'N/A';
+
+  document.getElementById('pwis-grid').innerHTML = `
+    <div class="pwis-card"><div class="pwis-val">${p.pwis_diabetes.toFixed(3)}</div><p>PWIS Diabetes</p></div>
+    <div class="pwis-card"><div class="pwis-val">${p.pwis_heart.toFixed(3)}</div><p>PWIS Heart Disease</p></div>
+    <div class="pwis-card"><div class="pwis-val">${p.paternal_score.toFixed(2)}</div><p>Paternal Score</p></div>
+    <div class="pwis-card"><div class="pwis-val">${p.maternal_score.toFixed(2)}</div><p>Maternal Score</p></div>
+    <div class="pwis-card"><div class="pwis-val">${p.family_disease_count}</div><p>Family Disease Count</p></div>
+  `;
+}
+
+document.getElementById('download-btn')?.addEventListener('click', async () => {
+  try {
+    const history = await apiFetch('/history/');
+    if (!history.length) { alert('No prediction record found.'); return; }
+    window.open(`${API}/history/${history[0].id}/report?token=${Auth.getToken()}`, '_blank');
+  } catch(e) { alert('Could not generate report: ' + e.message); }
+});
+</script>
+</body>
+</html>

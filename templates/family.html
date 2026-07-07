@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Family History – GeneTrace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.member-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem}
+.member-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.member-header .ico{font-size:1.6rem}
+.member-header h3{color:#fff;margin:0;font-size:1rem;font-weight:700}
+.disease-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;align-items:end}
+@media(max-width:700px){.disease-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/layout.js"></script>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="/dashboard">Dashboard</a> › Family History</div>
+  <h1>Family Medical History</h1>
+  <p>Enter your family members' medical history. This drives the hereditary risk calculation.</p>
+</div>
+
+<div class="stepper">
+  <div class="step active"><div class="step-circle">1</div><div class="step-label">Family History</div></div>
+  <div class="step"><div class="step-circle">2</div><div class="step-label">Personal Info</div></div>
+  <div class="step"><div class="step-circle">3</div><div class="step-label">Results</div></div>
+</div>
+
+<div id="alert-box"></div>
+
+<form id="family-form">
+
+<!-- Father -->
+<div class="member-section">
+  <div class="member-header"><span class="ico">👨</span><h3>Father</h3></div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Age (or age at death)</label><input type="number" class="form-control" id="f_age" min="0" max="120" placeholder="e.g. 65"></div>
+    <div class="form-group"><label class="form-label">Still Living?</label>
+      <select class="form-control" id="f_living"><option value="1">Yes</option><option value="0">No</option></select>
+    </div>
+  </div>
+  <div class="disease-row">
+    <div class="form-group"><label class="form-label">Diabetes</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="f_diabetes" data-val="0">No</button><button type="button" class="toggle-btn" data-field="f_diabetes" data-val="1">Yes</button></div>
+      <input type="hidden" id="f_diabetes" value="0">
+    </div>
+    <div class="form-group" id="f_diabetes_detail" style="display:none;">
+      <label class="form-label">Severity</label>
+      <select class="form-control" id="f_diabetes_sev"><option value="1">Mild</option><option value="2">Moderate</option><option value="3">Severe</option></select>
+    </div>
+    <div class="form-group" id="f_diabetes_onset_grp" style="display:none;">
+      <label class="form-label">Onset Age</label>
+      <input type="number" class="form-control" id="f_diabetes_onset" min="1" max="100" placeholder="e.g. 45">
+    </div>
+  </div>
+  <div class="disease-row">
+    <div class="form-group"><label class="form-label">Hypertension</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="f_hyp" data-val="0">No</button><button type="button" class="toggle-btn" data-field="f_hyp" data-val="1">Yes</button></div>
+      <input type="hidden" id="f_hyp" value="0">
+    </div>
+    <div class="form-group"><label class="form-label">Heart Disease</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="f_heart" data-val="0">No</button><button type="button" class="toggle-btn" data-field="f_heart" data-val="1">Yes</button></div>
+      <input type="hidden" id="f_heart" value="0">
+    </div>
+    <div class="form-group" id="f_heart_detail" style="display:none;">
+      <label class="form-label">Heart Severity</label>
+      <select class="form-control" id="f_heart_sev"><option value="1">Mild</option><option value="2">Moderate</option><option value="3">Severe</option></select>
+    </div>
+  </div>
+  <div class="disease-row">
+    <div class="form-group" id="f_heart_onset_grp" style="display:none;">
+      <label class="form-label">Heart Onset Age</label>
+      <input type="number" class="form-control" id="f_heart_onset" min="1" max="100" placeholder="e.g. 52">
+    </div>
+    <div class="form-group"><label class="form-label">Hair Loss</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="f_hair" data-val="0">No</button><button type="button" class="toggle-btn" data-field="f_hair" data-val="1">Yes</button></div>
+      <input type="hidden" id="f_hair" value="0">
+    </div>
+  </div>
+</div>
+
+<!-- Mother -->
+<div class="member-section">
+  <div class="member-header"><span class="ico">👩</span><h3>Mother</h3></div>
+  <div class="form-row">
+    <div class="form-group"><label class="form-label">Age (or age at death)</label><input type="number" class="form-control" id="m_age" min="0" max="120" placeholder="e.g. 62"></div>
+  </div>
+  <div class="disease-row">
+    <div class="form-group"><label class="form-label">Diabetes</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="m_diabetes" data-val="0">No</button><button type="button" class="toggle-btn" data-field="m_diabetes" data-val="1">Yes</button></div>
+      <input type="hidden" id="m_diabetes" value="0">
+    </div>
+    <div class="form-group" id="m_diabetes_detail" style="display:none;">
+      <label class="form-label">Severity</label>
+      <select class="form-control" id="m_diabetes_sev"><option value="1">Mild</option><option value="2">Moderate</option><option value="3">Severe</option></select>
+    </div>
+    <div class="form-group" id="m_diabetes_onset_grp" style="display:none;">
+      <label class="form-label">Onset Age</label>
+      <input type="number" class="form-control" id="m_diabetes_onset" min="1" max="100" placeholder="e.g. 48">
+    </div>
+  </div>
+  <div class="disease-row">
+    <div class="form-group"><label class="form-label">Hypertension</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="m_hyp" data-val="0">No</button><button type="button" class="toggle-btn" data-field="m_hyp" data-val="1">Yes</button></div>
+      <input type="hidden" id="m_hyp" value="0">
+    </div>
+    <div class="form-group"><label class="form-label">Heart Disease</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="m_heart" data-val="0">No</button><button type="button" class="toggle-btn" data-field="m_heart" data-val="1">Yes</button></div>
+      <input type="hidden" id="m_heart" value="0">
+    </div>
+    <div class="form-group" id="m_heart_detail" style="display:none;">
+      <label class="form-label">Heart Severity</label>
+      <select class="form-control" id="m_heart_sev"><option value="1">Mild</option><option value="2">Moderate</option><option value="3">Severe</option></select>
+    </div>
+  </div>
+  <div class="disease-row">
+    <div class="form-group" id="m_heart_onset_grp" style="display:none;">
+      <label class="form-label">Heart Onset Age</label>
+      <input type="number" class="form-control" id="m_heart_onset" min="1" max="100" placeholder="e.g. 58">
+    </div>
+    <div class="form-group"><label class="form-label">Hair Loss</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="m_hair" data-val="0">No</button><button type="button" class="toggle-btn" data-field="m_hair" data-val="1">Yes</button></div>
+      <input type="hidden" id="m_hair" value="0">
+    </div>
+  </div>
+</div>
+
+<!-- Grandparents -->
+<div class="member-section">
+  <div class="member-header"><span class="ico">👴👵</span><h3>Grandparents</h3></div>
+  <div class="form-row-3">
+    <div class="form-group"><label class="form-label">Paternal Grandfather – Diabetes</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="pgf_d" data-val="0">No</button><button type="button" class="toggle-btn" data-field="pgf_d" data-val="1">Yes</button></div>
+      <input type="hidden" id="pgf_d" value="0">
+    </div>
+    <div class="form-group"><label class="form-label">Paternal Grandmother – Diabetes</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="pgm_d" data-val="0">No</button><button type="button" class="toggle-btn" data-field="pgm_d" data-val="1">Yes</button></div>
+      <input type="hidden" id="pgm_d" value="0">
+    </div>
+    <div class="form-group"><label class="form-label">Paternal Grandfather – Hair Loss</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="pgf_h" data-val="0">No</button><button type="button" class="toggle-btn" data-field="pgf_h" data-val="1">Yes</button></div>
+      <input type="hidden" id="pgf_h" value="0">
+    </div>
+    <div class="form-group"><label class="form-label">Maternal Grandfather – Diabetes</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="mgf_d" data-val="0">No</button><button type="button" class="toggle-btn" data-field="mgf_d" data-val="1">Yes</button></div>
+      <input type="hidden" id="mgf_d" value="0">
+    </div>
+    <div class="form-group"><label class="form-label">Maternal Grandmother – Diabetes</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="mgm_d" data-val="0">No</button><button type="button" class="toggle-btn" data-field="mgm_d" data-val="1">Yes</button></div>
+      <input type="hidden" id="mgm_d" value="0">
+    </div>
+    <div class="form-group"><label class="form-label">Maternal Grandfather – Hair Loss</label>
+      <div class="toggle-group"><button type="button" class="toggle-btn active" data-field="mgf_h" data-val="0">No</button><button type="button" class="toggle-btn" data-field="mgf_h" data-val="1">Yes</button></div>
+      <input type="hidden" id="mgf_h" value="0">
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;gap:1rem;justify-content:flex-end;">
+  <a href="/dashboard" class="btn btn-ghost">Cancel</a>
+  <button type="submit" class="btn btn-primary btn-lg" id="save-btn">Save & Continue →</button>
+</div>
+</form>
+
+<script>
+Auth.requireAuth();
+injectLayout('/family');
+
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const field = btn.dataset.field;
+    document.querySelectorAll(`[data-field="${field}"]`).forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(field).value = btn.dataset.val;
+    const val = btn.dataset.val;
+    if (field === 'f_diabetes') { toggleDetail('f_diabetes_detail', val); toggleDetail('f_diabetes_onset_grp', val); }
+    if (field === 'm_diabetes') { toggleDetail('m_diabetes_detail', val); toggleDetail('m_diabetes_onset_grp', val); }
+    if (field === 'f_heart')    { toggleDetail('f_heart_detail', val); toggleDetail('f_heart_onset_grp', val); }
+    if (field === 'm_heart')    { toggleDetail('m_heart_detail', val); toggleDetail('m_heart_onset_grp', val); }
+  });
+});
+
+function toggleDetail(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = val === '1' ? '' : 'none';
+}
+
+const saved = JSON.parse(localStorage.getItem('gt_family') || '{}');
+if (saved.f_diabetes == 1) clickToggle('f_diabetes','1');
+if (saved.m_diabetes == 1) clickToggle('m_diabetes','1');
+if (saved.f_heart == 1)    clickToggle('f_heart','1');
+if (saved.m_heart == 1)    clickToggle('m_heart','1');
+['f_age','m_age','f_diabetes_sev','m_diabetes_sev','f_diabetes_onset','m_diabetes_onset',
+ 'f_heart_sev','m_heart_sev','f_heart_onset','m_heart_onset'].forEach(id => {
+  if (saved[id] !== undefined) { const el = document.getElementById(id); if(el) el.value = saved[id]; }
+});
+['f_hyp','m_hyp','f_hair','m_hair','pgf_d','pgm_d','mgf_d','mgm_d','pgf_h','mgf_h'].forEach(id => {
+  if (saved[id] == 1) clickToggle(id, '1');
+});
+
+function clickToggle(field, val) {
+  const btn = document.querySelector(`[data-field="${field}"][data-val="${val}"]`);
+  if (btn) btn.click();
+}
+
+function saveFamilyAndContinue() {
+  const data = {
+    f_diabetes: +document.getElementById('f_diabetes').value,
+    f_diabetes_sev: +document.getElementById('f_diabetes_sev').value,
+    f_diabetes_onset: +document.getElementById('f_diabetes_onset').value || 0,
+    f_hyp: +document.getElementById('f_hyp').value,
+    f_heart: +document.getElementById('f_heart').value,
+    f_heart_sev: +document.getElementById('f_heart_sev').value,
+    f_heart_onset: +document.getElementById('f_heart_onset').value || 0,
+    f_hair: +document.getElementById('f_hair').value,
+    m_diabetes: +document.getElementById('m_diabetes').value,
+    m_diabetes_sev: +document.getElementById('m_diabetes_sev').value,
+    m_diabetes_onset: +document.getElementById('m_diabetes_onset').value || 0,
+    m_hyp: +document.getElementById('m_hyp').value,
+    m_heart: +document.getElementById('m_heart').value,
+    m_heart_sev: +document.getElementById('m_heart_sev').value,
+    m_heart_onset: +document.getElementById('m_heart_onset').value || 0,
+    m_hair: +document.getElementById('m_hair').value,
+    pgf_d: +document.getElementById('pgf_d').value,
+    pgm_d: +document.getElementById('pgm_d').value,
+    mgf_d: +document.getElementById('mgf_d').value,
+    mgm_d: +document.getElementById('mgm_d').value,
+    pgf_h: +document.getElementById('pgf_h').value,
+    mgf_h: +document.getElementById('mgf_h').value,
+  };
+  localStorage.setItem('gt_family', JSON.stringify(data));
+  window.location.href = '/personal';
+}
+
+document.getElementById('family-form').addEventListener('submit', e => { e.preventDefault(); saveFamilyAndContinue(); });
+document.getElementById('save-btn').addEventListener('click', e => { e.preventDefault(); saveFamilyAndContinue(); });
+</script>
+</body>
+</html>

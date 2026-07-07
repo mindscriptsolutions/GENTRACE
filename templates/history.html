@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>History – GeneTrace</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/layout.js"></script>
+
+<div class="page-header">
+  <div class="breadcrumb"><a href="/dashboard">Dashboard</a> › History</div>
+  <h1>Prediction History</h1>
+  <p>All your past hereditary risk assessments</p>
+</div>
+
+<div class="card mb-2">
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
+    <input type="text" class="form-control" id="search" placeholder="Search by date..." style="max-width:260px;" oninput="filterTable()">
+    <select class="form-control" id="filter-risk" style="max-width:170px;" onchange="filterTable()">
+      <option value="">All Risk Levels</option>
+      <option value="low">Low</option>
+      <option value="moderate">Moderate</option>
+      <option value="high">High</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="loadHistory()">↺ Refresh</button>
+  </div>
+</div>
+
+<div id="alert-box"></div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">All Predictions</span>
+    <span id="count-badge" class="badge badge-info">0 records</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Date & Time</th><th>Diabetes</th><th>Hypertension</th><th>Heart Disease</th><th>Hair Loss</th><th>Overall</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="history-tbody"></tbody>
+    </table>
+  </div>
+  <div id="empty-state" class="text-center" style="padding:3rem;display:none;">
+    <div style="font-size:3rem;margin-bottom:1rem;">📋</div>
+    <h3>No Predictions Yet</h3>
+    <p style="margin-top:.5rem;">Start your first assessment to see history here.</p>
+    <a href="/family" class="btn btn-primary" style="margin-top:1.5rem;">Start Assessment</a>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay hidden" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Prediction Details</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Close</button>
+      <button class="btn btn-success" id="modal-download">📄 Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+Auth.requireAuth();
+injectLayout('/history');
+
+let allHistory = [];
+
+async function loadHistory() {
+  try {
+    allHistory = await apiFetch('/history/');
+    renderTable(allHistory);
+  } catch(e) {
+    document.getElementById('alert-box').innerHTML = `<div class="alert alert-danger">⚠ ${e.message}</div>`;
+  }
+}
+
+function renderTable(data) {
+  document.getElementById('count-badge').textContent = data.length + ' records';
+  if (data.length === 0) {
+    document.getElementById('history-tbody').innerHTML = '';
+    document.getElementById('empty-state').style.display = '';
+    return;
+  }
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('history-tbody').innerHTML = data.map((h, i) => {
+    const overall = ((h.diabetes_risk + h.hypertension_risk + h.heart_risk) / 3 * 100).toFixed(1);
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${fmtDate(h.predicted_at)}</td>
+      <td>${riskLabel(h.diabetes_risk*100)}</td>
+      <td>${riskLabel(h.hypertension_risk*100)}</td>
+      <td>${riskLabel(h.heart_risk*100)}</td>
+      <td><span class="badge badge-info">Stage ${h.hair_loss_norwood}</span></td>
+      <td>${riskLabel(+overall)}</td>
+      <td style="display:flex;gap:.35rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="viewDetail(${h.id})">View</button>
+        <button class="btn btn-success btn-sm" onclick="downloadReport(${h.id})">PDF</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRecord(${h.id})">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterTable() {
+  const q    = document.getElementById('search').value.toLowerCase();
+  const risk = document.getElementById('filter-risk').value;
+  const filtered = allHistory.filter(h => {
+    const dateStr = fmtDate(h.predicted_at).toLowerCase();
+    const overall = (h.diabetes_risk + h.hypertension_risk + h.heart_risk) / 3 * 100;
+    return (!q || dateStr.includes(q)) && (!risk || riskLevel(overall) === risk);
+  });
+  renderTable(filtered);
+}
+
+function viewDetail(id) {
+  const h = allHistory.find(x => x.id === id);
+  if (!h) return;
+  document.getElementById('modal-body').innerHTML = `
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:1rem;"><strong style="color:#fff;">Date:</strong> ${fmtDate(h.predicted_at)}</p>
+    <div style="margin:1rem 0;">
+      <div class="progress-wrap"><div class="progress-label"><span>Diabetes</span><span>${(h.diabetes_risk*100).toFixed(1)}%</span></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill fill-${riskLevel(h.diabetes_risk*100)}" style="width:${h.diabetes_risk*100}%"></div></div></div>
+      <div class="progress-wrap"><div class="progress-label"><span>Hypertension</span><span>${(h.hypertension_risk*100).toFixed(1)}%</span></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill fill-${riskLevel(h.hypertension_risk*100)}" style="width:${h.hypertension_risk*100}%"></div></div></div>
+      <div class="progress-wrap"><div class="progress-label"><span>Heart Disease</span><span>${(h.heart_risk*100).toFixed(1)}%</span></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill fill-${riskLevel(h.heart_risk*100)}" style="width:${h.heart_risk*100}%"></div></div></div>
+    </div>
+    <p style="color:var(--muted);font-size:.85rem;"><strong style="color:#fff;">Hair Loss:</strong> Norwood Stage ${h.hair_loss_norwood} — ${norwood_label(h.hair_loss_norwood)}</p>
+    <p style="margin-top:.75rem;color:var(--muted);font-size:.82rem;">${(h.recommendation||'').substring(0,300)}...</p>`;
+  document.getElementById('modal-download').onclick = () => downloadReport(id);
+  document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+
+function downloadReport(id) {
+  window.open(`${API}/history/${id}/report?token=${Auth.getToken()}`, '_blank');
+}
+
+async function deleteRecord(id) {
+  if (!confirm('Delete this prediction record?')) return;
+  try {
+    await apiFetch(`/history/${id}`, { method:'DELETE' });
+    allHistory = allHistory.filter(h => h.id !== id);
+    renderTable(allHistory);
+  } catch(e) {
+    document.getElementById('alert-box').innerHTML = `<div class="alert alert-danger">⚠ Delete failed: ${e.message}</div>`;
+  }
+}
+
+loadHistory();
+</script>
+</body>
+</html>
